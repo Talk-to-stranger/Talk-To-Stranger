@@ -51,7 +51,10 @@ module.exports = (sequelize, DataTypes) => {
       },
       status: {
         type: DataTypes.STRING,
-        defaultValue: 'offline'
+        defaultValue: 'offline',
+      },
+      SocketId: {
+        type: DataTypes.STRING,
       },
     },
     {
