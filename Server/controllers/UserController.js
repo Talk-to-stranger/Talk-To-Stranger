@@ -16,7 +16,7 @@ class UserController {
 
     static async login(req, res) {
         try {
-            const { email, password} = req.body
+            const {email, password} = req.body
             const user = await User.create({ email, password, name, phoneNumber })
             res.status(201).json({
                 id: user.id,
