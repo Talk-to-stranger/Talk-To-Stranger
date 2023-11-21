@@ -1,7 +1,9 @@
+const { comparePassword } = require('../helpers/bcrypt')
+const { signToken } = require('../helpers/jwt')
 const { User } = require('../models')
 class UserController {
 
-    static async register(req, res) {
+    static async register(req, res, next) {
         try {
             const { email, password, name, phoneNumber } = req.body
             const user = await User.create({ email, password, name, phoneNumber })
@@ -10,20 +12,23 @@ class UserController {
                 email: user.email
             })
         } catch (error) {
-            res.status(500).json({ message: "internal server error" })
+            next(error)
         }
     }
 
-    static async login(req, res) {
+    static async login(req, res, next) {
         try {
             const {email, password} = req.body
-            const user = await User.create({ email, password, name, phoneNumber })
-            res.status(201).json({
-                id: user.id,
-                email: user.email
-            })
+            if(!email) throw ({message: "Email is required"})
+            if(!password) throw ({message: "Password is required"})
+            const user = await User.findOne({where: {email}})
+            if(!user) throw ({message: "Invalid email/password"})
+            const isTruePassword = comparePassword(password, user.password)
+            if(!isTruePassword) throw ({message: "Invalid email/password"})
+            const access_token = signToken({id: user.id})
+            res.status(200).json({access_token})
         } catch (error) {
-            res.status(500).json({ message: "internal server error" })
+            next(error)
         }
     }
 
