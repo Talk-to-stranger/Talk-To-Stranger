@@ -57,24 +57,17 @@ class UserController {
       const users = await User.findAll({
         attributes: ['id', 'name', 'status', 'SocketId'],
       });
-      return users;
+      return { users, myProfile: user.name };
     } catch (error) {
       console.log(error);
     }
   }
 
-  static async offline(data) {
+  static async getUserBySocketId(data) {
     try {
-      const { id } = verifyToken(data.access_token);
-
-      const user = await User.findByPk(id);
-      if (!user) throw { message: 'User not Found' };
-
-      await user.update({ status: 'offline' });
-      const users = await User.findAll({
-        attributes: ['id', 'name', 'status', 'SocketId'],
-      });
-      return users;
+      const user = await User.findOne({ where: { SocketId: data } });
+      console.log(user, '<<<<<<<<< ini ada');
+      return user;
     } catch (error) {
       console.log(error);
     }
