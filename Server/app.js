@@ -29,11 +29,11 @@ io.on('connection', function (socket) {
   console.log('connect', socket.id);
   const socketId = socket.id;
   socketsStatus[socket.id] = {};
+  console.log(socketsStatus);
 
   socket.on('init', async (data) => {
     // console.log(socket.id, data);
     await UserController.loginUserSocket(socket.id, data);
-    console.log('tes');
   });
 
   socket.on('voice', function (data) {
@@ -41,6 +41,8 @@ io.on('connection', function (socket) {
     newData[0] = 'data:audio/ogg;';
     newData = newData[0] + newData[1];
     // console.log(socketsStatus, '<<<<< ini socket');
+
+    // socket.broadcast.emit('send', newData);
 
     for (const id in socketsStatus) {
       if (id != socketId && !socketsStatus[id].mute && socketsStatus[id].online) socket.broadcast.to(id).emit('send', newData);
@@ -54,6 +56,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function () {
+    console.log('disconnect');
     delete socketsStatus[socketId];
   });
 });

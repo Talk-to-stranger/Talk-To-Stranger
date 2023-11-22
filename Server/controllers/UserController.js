@@ -42,8 +42,6 @@ class UserController {
 
   static async loginUserSocket(socketId, data) {
     try {
-      console.log(data);
-
       const { id } = verifyToken(data.access_token);
 
       const user = await User.findByPk(id);
