@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const port = 3000;
 const router = require('../Server/routes');
+const cors = require('cors');
 const UserController = require('./controllers/UserController');
 
 // const http = require("http").Server(app);
@@ -61,6 +62,7 @@ io.on('connection', function (socket) {
   });
 });
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(router);
