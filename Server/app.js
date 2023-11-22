@@ -26,45 +26,49 @@ const io = new Server(server, {
 
 // });
 
-const socketsStatus = [];
-let Users = [];
-let access_token = '';
+const socketsStatus = {};
 
 io.on('connection', function (socket) {
   console.log('connect', socket.id);
   const socketId = socket.id;
-  // const user = await user;
   socketsStatus[socket.id] = {};
 
   socket.on('init', async (data) => {
     access_token = data;
-    // console.log(socket.id, data);
+
     const response = await UserController.loginUserSocket(socket.id, data);
-    // console.log(data);
     io.sockets.emit('usersUpdate', response);
+  });
+
+  socket.on('userInformation', function (data) {
+    socketsStatus[socketId] = data;
+    // io.sockets.emit('usersUpdate', Users);
   });
 
   socket.on('voice', function (data) {
     var newData = data.split(';');
     newData[0] = 'data:audio/ogg;';
     newData = newData[0] + newData[1];
+    // socket.broadcast.emit('send', newData);
 
     for (const id in socketsStatus) {
-      if (id != socketId && !socketsStatus[id].mute && socketsStatus[id].online) socket.broadcast.to(id).emit('send', newData);
+      if (id != socketId && !socketsStatus[id].status?.mute && socketsStatus[id].status?.online) socket.broadcast.to(id).emit('send', newData);
     }
-  });
-
-  socket.on('userInformation', function (data) {
-    socketsStatus[socketId] = data;
-    // console.log(Users);
-    // io.sockets.emit('usersUpdate', Users);
   });
 
   socket.on('disconnect', async function () {
     console.log('disconnect');
-    const response = await UserController.offline(access_token);
     delete socketsStatus[socketId];
-    io.sockets.emit('usersUpdate', response);
+    try {
+      const user = await UserController.getUserBySocketId(socketId);
+      if (user) {
+        await user.update({ status: 'offline' });
+        const users = await User.findAll();
+        io.sockets.emit('usersUpdate', users);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   });
 });
 
