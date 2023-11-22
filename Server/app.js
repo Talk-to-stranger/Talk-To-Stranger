@@ -4,11 +4,13 @@ const port = 3000;
 const router = require('../Server/routes');
 const cors = require('cors');
 const UserController = require('./controllers/UserController');
+const { User } = require('./models');
 
 // const http = require("http").Server(app);
 // const io = require("socket.io")(http);
 const { Server } = require('socket.io');
 const { createServer } = require('http');
+const user = require('./models/user');
 
 const server = createServer(app);
 const io = new Server(server, {
@@ -24,26 +26,28 @@ const io = new Server(server, {
 
 // });
 
-const socketsStatus = {};
+const socketsStatus = [];
+let Users = [];
+let access_token = '';
 
 io.on('connection', function (socket) {
   console.log('connect', socket.id);
   const socketId = socket.id;
+  // const user = await user;
   socketsStatus[socket.id] = {};
-  console.log(socketsStatus);
 
   socket.on('init', async (data) => {
+    access_token = data;
     // console.log(socket.id, data);
-    await UserController.loginUserSocket(socket.id, data);
+    const response = await UserController.loginUserSocket(socket.id, data);
+    // console.log(data);
+    io.sockets.emit('usersUpdate', response);
   });
 
   socket.on('voice', function (data) {
     var newData = data.split(';');
     newData[0] = 'data:audio/ogg;';
     newData = newData[0] + newData[1];
-    // console.log(socketsStatus, '<<<<< ini socket');
-
-    // socket.broadcast.emit('send', newData);
 
     for (const id in socketsStatus) {
       if (id != socketId && !socketsStatus[id].mute && socketsStatus[id].online) socket.broadcast.to(id).emit('send', newData);
@@ -52,13 +56,15 @@ io.on('connection', function (socket) {
 
   socket.on('userInformation', function (data) {
     socketsStatus[socketId] = data;
-
-    io.sockets.emit('usersUpdate', socketsStatus);
+    // console.log(Users);
+    // io.sockets.emit('usersUpdate', Users);
   });
 
-  socket.on('disconnect', function () {
+  socket.on('disconnect', async function () {
     console.log('disconnect');
+    const response = await UserController.offline(access_token);
     delete socketsStatus[socketId];
+    io.sockets.emit('usersUpdate', response);
   });
 });
 

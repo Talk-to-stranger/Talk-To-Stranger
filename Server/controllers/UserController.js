@@ -44,10 +44,37 @@ class UserController {
     try {
       const { id } = verifyToken(data.access_token);
 
+      const user = await User.findOne({
+        where: {
+          id,
+        },
+        attributes: ['id', 'name', 'status', 'SocketId'],
+      });
+      if (!user) throw { message: 'User not Found' };
+
+      await user.update({ SocketId: socketId, status: 'online' });
+
+      const users = await User.findAll({
+        attributes: ['id', 'name', 'status', 'SocketId'],
+      });
+      return users;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  static async offline(data) {
+    try {
+      const { id } = verifyToken(data.access_token);
+
       const user = await User.findByPk(id);
       if (!user) throw { message: 'User not Found' };
 
-      await user.update({ SocketId: socketId });
+      await user.update({ status: 'offline' });
+      const users = await User.findAll({
+        attributes: ['id', 'name', 'status', 'SocketId'],
+      });
+      return users;
     } catch (error) {
       console.log(error);
     }
