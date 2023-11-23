@@ -66,7 +66,6 @@ class UserController {
   static async getUserBySocketId(data) {
     try {
       const user = await User.findOne({ where: { SocketId: data } });
-      console.log(user, '<<<<<<<<< ini ada');
       return user;
     } catch (error) {
       console.log(error);
