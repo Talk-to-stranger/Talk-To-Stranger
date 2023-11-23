@@ -56,17 +56,19 @@ io.on('connection', function (socket) {
       if (id != socketId && !socketsStatus[id].status?.mute && socketsStatus[id].status?.online) socket.broadcast.to(id).emit('send', newData);
     }
   });
-
-  socket.on('disconnect', async function () {
+  
+  socket.on('userOffline', async function (data, cb) {
     console.log('disconnect');
 
     try {
-      const user = await UserController.getUserBySocketId(socketId);
+      const user = await UserController.disconnectUser(data);
+      console.log({socketId, socketsStatus, user})
       delete socketsStatus[socketId];
       if (user) {
         await user.update({ status: 'offline' });
         const users = await User.findAll();
         io.sockets.emit('usersUpdate', users);
+        cb()
       }
     } catch (error) {
       console.log(error);

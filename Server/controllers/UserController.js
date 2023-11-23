@@ -71,6 +71,16 @@ class UserController {
       console.log(error);
     }
   }
+
+  static async disconnectUser(data) {
+    try {
+      const { id } = verifyToken(data.access_token);
+      const user = await User.findByPk(id)
+      return user
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }
 
 module.exports = UserController;
