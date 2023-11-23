@@ -37,7 +37,8 @@ io.on('connection', function (socket) {
     access_token = data;
 
     const response = await UserController.loginUserSocket(socket.id, data);
-    io.sockets.emit('usersUpdate', response);
+    io.sockets.emit('usersUpdate', response.users);
+    io.sockets.to(socketId).emit('myProfile', response.myProfile);
   });
 
   socket.on('userInformation', function (data) {
@@ -58,9 +59,10 @@ io.on('connection', function (socket) {
 
   socket.on('disconnect', async function () {
     console.log('disconnect');
-    delete socketsStatus[socketId];
+
     try {
       const user = await UserController.getUserBySocketId(socketId);
+      delete socketsStatus[socketId];
       if (user) {
         await user.update({ status: 'offline' });
         const users = await User.findAll();
